@@ -20,17 +20,6 @@ REPLIES_URI = 'utils/replies.json'
 BALANCES_API = "https://server.duinocoin.com:5000/balances/"
 PRICE_API = "https://server.duinocoin.com/api.json"
 
-help_str = """\
-Prefix: {}
-Commands:
-    `help`
-    `price`
-    `mcip`
-
-    `balance <DUCO username>` - Get user balance
-    `say <tosay>` - Make the bot say something [admin]
-""".format(PREFIX)
-
 with open(REPLIES_URI, "r") as replies_file:
     duino_stats_replies = json.load(replies_file)
 
@@ -44,6 +33,40 @@ async def on_ready():
 async def on_message(message):
     mention = f'<@!{client.user.id}>'
 
+    help_embed = discord.Embed(
+        title="List of available commands",
+        color=discord.Color.gold(),
+        timestamp=datetime.utcnow()
+    )
+    help_embed.set_author(
+        name=message.author.display_name,
+        icon_url=message.author.avatar_url
+    )
+    help_embed.set_footer(
+        text=client.user.name,
+        icon_url=client.user.avatar_url
+    )
+    help_embed.set_thumbnail(
+        url=client.user.avatar_url
+    )
+
+    help_embed.add_field(
+        name="General",
+        value="""\
+        `{p}balance <DUCO username>` - Get user balance
+        `{p}help` - Show this help message
+        """.replace("{p}", PREFIX),
+        inline=False
+    )
+    help_embed.add_field(
+        name="Admin",
+        value="""\
+        `{p}say <tosay>` - Make the bot say something
+        """.replace("{p}", PREFIX),
+        inline=False
+    )
+
+    
     if message.author == client.user:
         return
 
@@ -73,11 +96,11 @@ async def on_message(message):
             else:
                 try:
                     print("Getting balance api")
-                    #async with aiohttp.ClientSession() as session:
-                    #    async with session.get(BALANCES_API
-                    #                           + command[1]) as resp:
-                    #        response = json.loads(await resp.text())
-                    response = {"result": {"balance": 69420.42069}, "success": True}
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(BALANCES_API
+                                               + command[1]) as resp:
+                            response = json.loads(await resp.text())
+                    #response = {"result": {"balance": 69420.42069}, "success": True}
 
                     print("Got balance api")
 
@@ -89,11 +112,11 @@ async def on_message(message):
 
                         try:
                             print("Getting price api")
-                            #async with aiohttp.ClientSession() as session:
-                            #    async with session.get(PRICE_API) as resp:
-                            #        response_price = json.loads(
-                            #            await resp.text())
-                            response_price = {"Duco price": 0.0065}
+                            async with aiohttp.ClientSession() as session:
+                                async with session.get(PRICE_API) as resp:
+                                    response_price = json.loads(
+                                        await resp.text())
+                            #response_price = {"Duco price": 0.0065}
                             print("Got price api")
 
                             price = float(response_price["Duco price"])
@@ -137,7 +160,7 @@ async def on_message(message):
             await message.channel.send("Duino-Coin current price: $")
 
         if command[0] == "help":
-            await message.channel.send(help_str)
+            await message.channel.send(embed=help_embed)
 
         if command[0] == "mcip":
             await message.channel.send(
@@ -147,11 +170,6 @@ async def on_message(message):
                 IP: play.duinocraft.com
                 Earn Duino-Coin just by playing!
                 """
-            )
-
-        if command[0] == "price":
-            await message.channel.send(
-                "The web wallet link is: https://wallet.duinocoin.com"
             )
 
 client.run(TOKEN)
