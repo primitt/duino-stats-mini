@@ -1,2 +1,2 @@
-# duino-coin-publicbot
-The public discord bot, created by: primitt, further developed by: duino-coin team. 
+# duino-stats-mini
+The public Duino Stats Discord bot created by primitt and others from the Duino team. 
