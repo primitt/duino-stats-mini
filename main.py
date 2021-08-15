@@ -205,7 +205,7 @@ async def on_message(message):
         fpri = 'Duino-Coin current price: $', pri
         await message.channel.send(fpri)
     if message.content.startswith("$help"):
-        await message.channel.send("Prefix: $ \n Commands: \n -help \n -price \n -hello \n -mcip \n botinfo")
+        await message.channel.send("Prefix: $ \n Commands: \n -help \n -price \n -hello \n -mcip \n -botinfo \n -webwallet")
 
     if message.content.startswith("$mcip"):
         await message.channel.send("DuinoCraft minecraft server info: \n Server Version: 1.16-1.17.1 \n IP: play.duinocraft.com \n Server Info: Earn Duino-Coin just by playing!")
@@ -218,12 +218,10 @@ async def on_message(message):
         await message.channel.send("AMD sucks....")
     if message.content.startswith("hello bot"):
         await message.channel.send("hello!")
-    if message.content.startswith("$")
+    #if message.content.startswith("$")
 
 
 
 client.run(os.getenv('TOKEN'))
-
-
 
 
