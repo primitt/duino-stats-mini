@@ -27,7 +27,12 @@ with open(REPLIES_URI, "r") as replies_file:
 @client.event
 async def on_ready():
     print("Logged in as {0.user}".format(client))
-
+    await client.change_presence(
+        activity=discord.Activity(
+            type=discord.ActivityType.playing,
+            name="with your duino-coin"
+        )
+   )
 
 @client.event
 async def on_message(message):
@@ -157,7 +162,8 @@ async def on_message(message):
                     )
 
         if command[0] == "price":
-            await message.channel.send("Duino-Coin current price: $")
+            ducoapi.Getducoprice
+            await message.channel.send("Duino-Coin current price: $", )
 
         if command[0] == "help":
             await message.channel.send(embed=help_embed)
@@ -171,5 +177,9 @@ async def on_message(message):
                 Earn Duino-Coin just by playing!
                 """
             )
+
+
+
+          
 
 client.run(TOKEN)
