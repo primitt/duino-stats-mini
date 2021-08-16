@@ -162,8 +162,10 @@ async def on_message(message):
                     )
 
         if command[0] == "price":
-            ducoapi.Getducoprice
-            await message.channel.send("Duino-Coin current price: $", )
+            import ducoapi
+            price = ducoapi.get_duco_price()
+            fprice = "Duino-Coin price: $", price
+            await message.channel.send(fprice)
 
         if command[0] == "help":
             await message.channel.send(embed=help_embed)
@@ -177,8 +179,7 @@ async def on_message(message):
                 Earn Duino-Coin just by playing!
                 """
             )
-
-
+        
 
           
 
