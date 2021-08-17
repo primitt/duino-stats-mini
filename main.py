@@ -10,12 +10,14 @@ import requests
 from datetime import datetime
 import aiohttp
 import asyncio
+import threading
+from time import sleep
 
 load_dotenv()
 client = discord.Client()
 
 EM_TRUE = "<:true:877164045248102471>"
-EM_FALSE ="<:false:877164045176819782>"
+EM_FALSE = "<:false:877164045176819782>"
 TOKEN = os.getenv('TOKEN')
 PREFIX = "+"
 REPLIES_URI = 'utils/replies.json'
@@ -44,11 +46,11 @@ with open(REPLIES_URI, "r") as replies_file:
     duino_stats_replies = json.load(replies_file)
 
 duino_stats_pings = [
-    "hey", 
-    "stop ignoring me", 
-    "plz respond :(", 
-    "hi", 
-    "!!!!", 
+    "hey",
+    "stop ignoring me",
+    "plz respond :(",
+    "hi",
+    "!!!!",
     "task for you"
 ]
 
@@ -80,7 +82,16 @@ def prefix(symbol: str, value: float, accuracy=2):
 async def on_ready():
     print("Logged in as {0.user}".format(client))
 
-    in_servers = str(len(client.guilds))
+    while True:
+        in_servers = str(len(client.guilds))
+        await client.change_presence(
+            activity=discord.Game(
+                name="serving " + in_servers + " servers"))
+        sleep(15)
+        await client.change_presence(
+            activity=discord.Game(
+                name="with your duinos - " + PREFIX + "help"))
+        sleep(15)
 
 
 @client.event
@@ -113,6 +124,7 @@ async def on_message(message):
         `{p}profile` - Show info about your profile
         `{p}server` - Show mining nodes status
         `{p}invite` - Invite Duino Stats Mini to your server
+        `{p}about` - Show info about the bot
         """.replace("{p}", PREFIX),
         inline=False
     )
@@ -124,13 +136,13 @@ async def on_message(message):
         inline=False
     )
 
-    try:
-        if message.guild.id == 677615191793467402:
-            if random.randint(0, 500) == 77:
-                rand_ping = random.choice(duino_stats_pings)
-                await message.channel.send("<@!691404890290913280> " + rand_ping)
-    except Exception as e:
-        print(e)
+    if message.guild.id == 677615191793467402:
+        if random.randint(0, 500) == 77:
+            rand_ping = random.choice(duino_stats_pings)
+            await message.channel.send(
+                "<@!691404890290913280> "
+                + rand_ping
+            )
 
     if message.author == client.user:
         return
@@ -420,9 +432,42 @@ async def on_message(message):
         if command[0] == "invite":
             embed = discord.Embed(
                 title="Invite Duino Stats Mini",
-                description=("[Click this text to add this bot to your server]"
-                + "(https://discord.com/api/oauth2/authorize?client_id="
-                + "876506340112076801&permissions=257701570624&scope=bot)"),
+                description=(
+                    "[Click this text to add this bot to your server]"
+                    + "(https://discord.com/api/oauth2/authorize?client_id="
+                    + "876506340112076801&permissions=257701570624&scope=bot)"
+                ),
+                color=discord.Color.gold(),
+                timestamp=datetime.utcnow()
+            )
+            embed.set_author(
+                name=message.author.display_name,
+                icon_url=message.author.avatar_url
+            )
+            embed.set_footer(
+                text=client.user.name,
+                icon_url=client.user.avatar_url
+            )
+            await message.channel.send(embed=embed)
+
+        if command[0] == "about":
+            in_servers = str(len(client.guilds))
+            embed = discord.Embed(
+                title="Duino Stats Mini",
+                description=(
+                    "An official, public, stripped down version of"
+                    + " [**Duino Stats**]"
+                    + "(https://github.com/Bilaboz/duino-stats)"
+                    + " found on the [**Official Duino-Coin Discord**]"
+                    + "(https://discord.gg/duinocoin).\n\n"
+                    + "Created by [**primitt**](https://github.com/primitt)"
+                    + " and [**revox**](https://github.com/revoxhere)"
+                    + " from the **Duino** team\n"
+                    + "Hosted on a **Raspberry Pi 4**\n"
+                    + "Serving **" + in_servers + " servers**\n"
+                    + "This bot is open-source. You can improve it [here]"
+                    + "(https://github.com/primitt/duino-stats-mini/)"
+                ),
                 color=discord.Color.gold(),
                 timestamp=datetime.utcnow()
             )
