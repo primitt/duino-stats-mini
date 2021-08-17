@@ -14,11 +14,31 @@ import asyncio
 load_dotenv()
 client = discord.Client()
 
+EM_TRUE = "<:true:877164045248102471>"
+EM_FALSE ="<:false:877164045176819782>"
 TOKEN = os.getenv('TOKEN')
-PREFIX = "$"
+PREFIX = "+"
 REPLIES_URI = 'utils/replies.json'
 USER_API = "https://server.duinocoin.com/users/"
 PRICE_API = "https://server.duinocoin.com/api.json"
+NODES = {
+    ":heartpulse: PulsePool *(149.91.88.18)*": {
+        "ip": "149.91.88.18",
+        "port": 6000,
+        "status": ":question: Unknown"
+    },
+    ":star: StarPool *(51.158.182.90)*": {
+        "ip": "51.158.182.90",
+        "port": 6000,
+        "status": ":question: Unknown"
+    },
+    ":floppy_disk: Master Server *(51.15.127.80)*": {
+        "ip": "51.15.127.80",
+        "port": 2812,
+        "status": ":question: Unknown"
+    }
+}
+
 
 with open(REPLIES_URI, "r") as replies_file:
     duino_stats_replies = json.load(replies_file)
@@ -51,6 +71,8 @@ def prefix(symbol: str, value: float, accuracy=2):
 async def on_ready():
     print("Logged in as {0.user}".format(client))
 
+    in_servers = str(len(client.guilds))
+
 
 @client.event
 async def on_message(message):
@@ -80,6 +102,8 @@ async def on_message(message):
         `{p}help` - Show this help message
         `{p}mcip` - Show DuinoCraft IP
         `{p}profile` - Show info about your profile
+        `{p}server` - Show mining nodes status
+        `{p}invite` - Invite Duino Stats Mini to your server
         """.replace("{p}", PREFIX),
         inline=False
     )
@@ -375,5 +399,79 @@ async def on_message(message):
                 icon_url=client.user.avatar_url
             )
             await message.channel.send(embed=embed)
+
+        if command[0] == "invite":
+            embed = discord.Embed(
+                title="Invite Duino Stats Mini",
+                description=("[Click this text to add this bot to your server]"
+                + "(https://discord.com/api/oauth2/authorize?client_id="
+                + "876506340112076801&permissions=257701570624&scope=bot)"),
+                color=discord.Color.gold(),
+                timestamp=datetime.utcnow()
+            )
+            embed.set_author(
+                name=message.author.display_name,
+                icon_url=message.author.avatar_url
+            )
+            embed.set_footer(
+                text=client.user.name,
+                icon_url=client.user.avatar_url
+            )
+            await message.channel.send(embed=embed)
+
+        if (command[0] == "server"
+            or command[0] == "servers"
+                or command[0] == "nodes"):
+            embed = discord.Embed(
+                title="Please wait",
+                description=("Pinging **Duino-Coin** services..."),
+                color=discord.Color.gold(),
+                timestamp=datetime.utcnow()
+            )
+            embed.set_author(
+                name=message.author.display_name,
+                icon_url=message.author.avatar_url
+            )
+            embed.set_footer(
+                text=client.user.name,
+                icon_url=client.user.avatar_url
+            )
+            msg = await message.channel.send(embed=embed)
+
+            embed = discord.Embed(
+                title="Ping results",
+                color=discord.Color.gold(),
+                timestamp=datetime.utcnow()
+            )
+            embed.set_author(
+                name=message.author.display_name,
+                icon_url=message.author.avatar_url
+            )
+            embed.set_footer(
+                text=client.user.name,
+                icon_url=client.user.avatar_url
+            )
+
+            for node in NODES:
+                from socket import socket
+                s = socket()
+                try:
+                    s.settimeout(1)
+                    s.connect((NODES[node]["ip"], NODES[node]["port"]))
+                    ver = s.recv(3)
+                    if float(ver):
+                        NODES[node]["status"] = EM_TRUE + " Operational"
+                    else:
+                        NODES[node]["status"] = EM_TRUE + " Offline"
+                except Exception:
+                    NODES[node]["status"] = EM_FALSE + " Timeout"
+
+                embed.add_field(
+                    name=node,
+                    value=NODES[node]["status"],
+                    inline=True
+                )
+
+            await msg.edit(embed=embed)
 
 client.run(TOKEN)
