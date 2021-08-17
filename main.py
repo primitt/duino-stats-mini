@@ -17,22 +17,40 @@ client = discord.Client()
 TOKEN = os.getenv('TOKEN')
 PREFIX = "$"
 REPLIES_URI = 'utils/replies.json'
-BALANCES_API = "https://server.duinocoin.com:5000/balances/"
+USER_API = "https://server.duinocoin.com/users/"
 PRICE_API = "https://server.duinocoin.com/api.json"
 
 with open(REPLIES_URI, "r") as replies_file:
     duino_stats_replies = json.load(replies_file)
 
 
+def prefix(symbol: str, value: float, accuracy=2):
+    """
+    Input: symbol to add, value 
+    Output rounded value with scientific prefix as string
+    """
+    if value >= 900000000:
+        prefix = " G"
+        value = value / 1000000000
+    elif value >= 900000:
+        prefix = " M"
+        value = value / 1000000
+    elif value >= 900:
+        prefix = " k"
+        value = value / 1000
+    else:
+        prefix = " "
+    return (
+        str(round(value, accuracy))
+        + str(prefix)
+        + str(symbol)
+    )
+
+
 @client.event
 async def on_ready():
     print("Logged in as {0.user}".format(client))
-    await client.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.playing,
-            name="with your duino-coin"
-        )
-   )
+
 
 @client.event
 async def on_message(message):
@@ -54,12 +72,14 @@ async def on_message(message):
     help_embed.set_thumbnail(
         url=client.user.avatar_url
     )
-
     help_embed.add_field(
         name="General",
         value="""\
         `{p}balance <DUCO username>` - Get user balance
+        `{p}price` - Show current DUCO prices
         `{p}help` - Show this help message
+        `{p}mcip` - Show DuinoCraft IP
+        `{p}profile` - Show info about your profile
         """.replace("{p}", PREFIX),
         inline=False
     )
@@ -71,7 +91,6 @@ async def on_message(message):
         inline=False
     )
 
-    
     if message.author == client.user:
         return
 
@@ -95,48 +114,36 @@ async def on_message(message):
                 await message.channel.send(
                     ":no_entry: You dont't have the permission to do that!")
 
-        if command[0] == "balance":
-            if not command[1]:
-                await message.channel.send("Provide a username first")
-            else:
+        if (command[0] == "balance"
+            or command[0] == "bal"
+                or command[0] == "b"):
+            try:
+                _ = command[1]
                 try:
-                    print("Getting balance api")
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(BALANCES_API
+                        async with session.get(USER_API
                                                + command[1]) as resp:
                             response = json.loads(await resp.text())
-                    #response = {"result": {"balance": 69420.42069}, "success": True}
-
-                    print("Got balance api")
 
                     if not response["success"]:
                         message.channel.send("This user doesn't exist")
 
                     else:
-                        balance = float(response["result"]["balance"])
+                        balance = float(
+                            response["result"]["balance"]["balance"])
+                        miners = response["result"]["miners"]
 
                         try:
-                            print("Getting price api")
                             async with aiohttp.ClientSession() as session:
                                 async with session.get(PRICE_API) as resp:
                                     response_price = json.loads(
                                         await resp.text())
-                            #response_price = {"Duco price": 0.0065}
-                            print("Got price api")
 
-                            price = float(response_price["Duco price"])
-                            balance_in_usd = balance * price
+                            price = response_price["Duco price"]
+                            balance_in_usd = price * balance
 
-                            print("Sending embed")
                             embed = discord.Embed(
-                                description="**"
-                                + str(command[1])
-                                + "**'s balance: **"
-                                + str(balance)
-                                + "** <:duco:876588980630618152>"
-                                + " ($"
-                                + str(round(balance_in_usd, 4))
-                                + ")",
+                                title=str(command[1]+"'s Duino-Coin account"),
                                 color=discord.Color.gold(),
                                 timestamp=datetime.utcnow()
                             )
@@ -148,11 +155,67 @@ async def on_message(message):
                                 text=client.user.name,
                                 icon_url=client.user.avatar_url
                             )
+                            embed.add_field(
+                                name="<:duco:876588980630618152> Balance",
+                                value=str(balance)
+                                + " DUCO"
+                                + " ($"
+                                + str(round(balance_in_usd, 4))
+                                + ")",
+                                inline=False
+                            )
+
+                            total_hashrate = 0
+                            if not miners:
+                                miner_str = "No miners running on this account"
+                            else:
+                                miner_str = ""
+                                i = 0
+                                for miner in miners:
+                                    total_hashrate += miner["hashrate"]
+
+                                    if miner["identifier"] != "None":
+                                        miner_str += (
+                                            miner["identifier"]
+                                            + " ("
+                                            + miner["software"]
+                                            + ")")
+                                    else:
+                                        miner_str += miner["software"]
+
+                                    miner_str += (
+                                        " **"
+                                        + str(miner["accepted"])
+                                        + "/"
+                                        + str(miner["accepted"] +
+                                              miner["rejected"])
+                                        + "** "
+                                        + str(prefix("H/s", miner["hashrate"]))
+                                        + "\n"
+                                    )
+
+                                    i += 1
+                                    if i >= 10:
+                                        miner_str += ("and "
+                                                      + str(len(miners)-i)
+                                                      + " more miners...")
+                                        break
+
+                            embed.add_field(
+                                name=":pick: Miners ("
+                                + str(len(miners))
+                                + ") - "
+                                + str(prefix("H/s", total_hashrate))
+                                + " total",
+                                value=miner_str,
+                                inline=False
+                            )
+
                             await message.channel.send(embed=embed)
 
                         except Exception as e:
                             await message.channel.send(
-                                "`ERROR` Can't fetch the price: "
+                                "`ERROR` Can't fetch user data: "
                                 + str(e)
                             )
                 except Exception as e:
@@ -160,27 +223,157 @@ async def on_message(message):
                         "`ERROR` Can't fetch the balances: "
                         + str(e)
                     )
+            except IndexError:
+                await message.channel.send(
+                    "Provide a username first (e.g. {}bal revox)"
+                    .format(PREFIX))
 
         if command[0] == "price":
-            import ducoapi
-            price = ducoapi.get_duco_price()
-            fprice = "Duino-Coin price: $", price
-            await message.channel.send(fprice)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(PRICE_API) as resp:
+                    response_price = json.loads(
+                        await resp.text())
+
+            price_xmg = float(response_price["Duco price"])
+            price_bch = float(response_price["Duco price BCH"])
+            price_trx = float(response_price["Duco price TRX"])
+
+            price_nano = float(response_price["Duco price NANO"])
+            price_xrp = float(response_price["Duco price XRP"])
+            price_dgb = float(response_price["Duco price DGB"])
+
+            price_justswap = float(response_price["Duco JustSwap price"])
+            price_nodes = float(response_price["Duco Node-S price"])
+
+            embed = discord.Embed(
+                description=("Please keep in mind that price "
+                             + "on the chart is updated every 1 day"),
+                color=discord.Color.gold(),
+                timestamp=datetime.utcnow()
+            )
+            embed.set_author(
+                name=message.author.display_name,
+                icon_url=message.author.avatar_url
+            )
+            embed.set_footer(
+                text=client.user.name,
+                icon_url=client.user.avatar_url
+            )
+            embed.add_field(
+                name="<:magi:876963168218394644> DUCO Exchange (XMG)",
+                value="$"+str(round(price_xmg, 6)),
+                inline=True
+            )
+            embed.add_field(
+                name="<:bitcoincash:876963784491671622> DUCO Exchange (BCH)",
+                value="$"+str(round(price_bch, 6)),
+                inline=True
+            )
+            embed.add_field(
+                name="<:tron:876962726000349204> DUCO Exchange (TRX)",
+                value="$"+str(round(price_trx, 6)),
+                inline=True
+            )
+            embed.add_field(
+                name="<:nano:876962697730752552> DUCO Exchange (NANO)",
+                value="$"+str(round(price_nano, 6)),
+                inline=True
+            )
+            embed.add_field(
+                name="<:digibyte:876962596270510120> DUCO Exchange (DGB)",
+                value="$"+str(round(price_dgb, 6)),
+                inline=True
+            )
+            embed.add_field(
+                name="<:ripple:876962797882327110> DUCO Exchange (XRP)",
+                value="$"+str(round(price_xrp, 6)),
+                inline=True
+            )
+            embed.add_field(
+                name=":currency_exchange: Node-S Exchange",
+                value="$"+str(round(price_nodes, 6)),
+                inline=True
+            )
+            embed.add_field(
+                name=":white_flower: JustSwap",
+                value="$"+str(round(price_justswap, 6)),
+                inline=True
+            )
+            embed.add_field(
+                name=":person_standing: otc-trading",
+                value="[Duino-Coin Discord](https://discord.gg/duinocoin)",
+                inline=True
+            )
+            embed.set_image(url="https://server.duinocoin.com/prices.png")
+
+            await message.channel.send(embed=embed)
 
         if command[0] == "help":
             await message.channel.send(embed=help_embed)
 
-        if command[0] == "mcip":
-            await message.channel.send(
-                """"
-                DuinoCraft:
-                Server Version: 1.16-1.17.1
-                IP: play.duinocraft.com
-                Earn Duino-Coin just by playing!
-                """
-            )
-        
+        if command[0] == "p":
+            created = message.author.created_at
+            if message.author.guild_permissions.administrator:
+                admin = "Yes"
+            else:
+                admin = "No"
 
-          
+            embed = discord.Embed(
+                title=message.author.display_name+"'s profile",
+                color=discord.Color.gold(),
+                timestamp=datetime.utcnow()
+            )
+            embed.set_author(
+                name=message.author.display_name,
+                icon_url=message.author.avatar_url
+            )
+            embed.set_footer(
+                text=client.user.name,
+                icon_url=client.user.avatar_url
+            )
+            embed.set_thumbnail(
+                url=message.author.avatar_url
+            )
+            embed.add_field(
+                name="User",
+                value=message.author,
+                inline=False
+            )
+            embed.add_field(
+                name="ID",
+                value=message.author.id,
+                inline=False
+            )
+            embed.add_field(
+                name="Admin",
+                value=admin,
+                inline=False
+            )
+            embed.add_field(
+                name="Account creation date",
+                value=str(created)[:-7],
+                inline=False
+            )
+
+            await message.channel.send(embed=embed)
+
+        if command[0] == "mcip":
+            embed = discord.Embed(
+                title="DuinoCraft",
+                description=("Server version: **Minecraft 1.16-1.17.1**\n"
+                             + "IP: **play.duinocraft.com**\n"
+                             + "Earn Duino-Coin just by playing!"),
+                color=discord.Color.gold(),
+                timestamp=datetime.utcnow()
+            )
+            embed.set_author(
+                name=message.author.display_name,
+                icon_url=message.author.avatar_url
+            )
+            embed.set_footer(
+                text=client.user.name,
+                icon_url=client.user.avatar_url
+            )
+            await message.channel.send(embed=embed)
 
 client.run(TOKEN)
