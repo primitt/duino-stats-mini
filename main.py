@@ -43,6 +43,15 @@ NODES = {
 with open(REPLIES_URI, "r") as replies_file:
     duino_stats_replies = json.load(replies_file)
 
+duino_stats_pings = [
+    "hey", 
+    "stop ignoring me", 
+    "plz respond :(", 
+    "hi", 
+    "!!!!", 
+    "task for you"
+]
+
 
 def prefix(symbol: str, value: float, accuracy=2):
     """
@@ -114,6 +123,14 @@ async def on_message(message):
         """.replace("{p}", PREFIX),
         inline=False
     )
+
+    try:
+        if message.guild.id == 677615191793467402:
+            if random.randint(0, 500) == 77:
+                rand_ping = random.choice(duino_stats_pings)
+                await message.channel.send("<@!691404890290913280> " + rand_ping)
+    except Exception as e:
+        print(e)
 
     if message.author == client.user:
         return
