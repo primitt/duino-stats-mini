@@ -24,9 +24,14 @@ REPLIES_URI = 'utils/replies.json'
 USER_API = "https://server.duinocoin.com/users/"
 PRICE_API = "https://server.duinocoin.com/api.json"
 NODES = {
+    ":floppy_disk: Master Server *(51.15.127.80)*": {
+        "ip": "51.15.127.80",
+        "port": 2812,
+        "status": ":question: Unknown"
+    },
     ":heartpulse: PulsePool *(149.91.88.18)*": {
         "ip": "149.91.88.18",
-        "port": 6000,
+        "port": 5999,
         "status": ":question: Unknown"
     },
     ":star: StarPool *(51.158.182.90)*": {
@@ -34,9 +39,9 @@ NODES = {
         "port": 6000,
         "status": ":question: Unknown"
     },
-    ":floppy_disk: Master Server *(51.15.127.80)*": {
-        "ip": "51.15.127.80",
-        "port": 2812,
+    ":trophy: WinnerPool *(193.164.7.180)*": {
+        "ip": "193.164.7.180",
+        "port": 6000,
         "status": ":question: Unknown"
     }
 }
@@ -82,16 +87,16 @@ def prefix(symbol: str, value: float, accuracy=2):
 async def on_ready():
     print("Logged in as {0.user}".format(client))
 
-    while True:
-        in_servers = str(len(client.guilds))
-        await client.change_presence(
-            activity=discord.Game(
-                name="serving " + in_servers + " servers"))
-        sleep(15)
-        await client.change_presence(
-            activity=discord.Game(
-                name="with your duinos - " + PREFIX + "help"))
-        sleep(15)
+    #sleep(5)
+    #while True:
+    #    in_servers = str(len(client.guilds))
+    #    await client.change_presence(
+    #        activity=discord.Game(
+    #            name="serving " + in_servers + " servers"))
+    #    sleep(15)
+    await client.change_presence(
+        activity=discord.Game(
+            name="with your duinos - " + PREFIX + "help"))
 
 
 @client.event
@@ -179,7 +184,7 @@ async def on_message(message):
                             response = json.loads(await resp.text())
 
                     if not response["success"]:
-                        message.channel.send("This user doesn't exist")
+                        await message.channel.send("This user doesn't exist")
 
                     else:
                         balance = float(
