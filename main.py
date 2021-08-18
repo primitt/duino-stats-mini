@@ -130,6 +130,7 @@ async def on_message(message):
         `{p}server` - Show mining nodes status
         `{p}invite` - Invite Duino Stats Mini to your server
         `{p}about` - Show info about the bot
+        `{p}statistics` - Show network stats
         """.replace("{p}", PREFIX),
         inline=False
     )
@@ -363,6 +364,79 @@ async def on_message(message):
                 inline=True
             )
             embed.set_image(url="https://server.duinocoin.com/prices.png")
+
+            await message.channel.send(embed=embed)
+
+        if (command[0] == "stats"
+            or command[0] == "statistics"):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(PRICE_API) as resp:
+                    response = json.loads(
+                        await resp.text())
+
+            total_hashrate = response["Pool hashrate"]
+            users = str(response["Registered users"])
+            net_wattage = response["Net energy usage"]
+            difficulty = str(response["Current difficulty"])
+            circulation = str(round(response["All-time mined DUCO"]))
+            duco_price = "$" + str(response["Duco price"])
+            market_cap = "$" + str(
+                round(response["Duco price"]*response["All-time mined DUCO"], 2)
+            )
+
+            embed = discord.Embed(
+                title="Duino-Coin Statistics",
+                color=discord.Color.gold(),
+                timestamp=datetime.utcnow()
+            )
+            embed.set_author(
+                name=message.author.display_name,
+                icon_url=message.author.avatar_url
+            )
+            embed.set_footer(
+                text=client.user.name,
+                icon_url=client.user.avatar_url
+            )
+            embed.add_field(
+                name=":pick: Net hashrate",
+                value=total_hashrate,
+                inline=True
+            )
+            embed.add_field(
+                name=":evergreen_tree: Net energy usage",
+                value=net_wattage,
+                inline=True
+            )
+            embed.add_field(
+                name=":people_holding_hands: Registered users",
+                value=users,
+                inline=True
+            )
+            embed.add_field(
+                name=":gear: Net difficulty",
+                value=difficulty,
+                inline=True
+            )
+            embed.add_field(
+                name=":coin: All mined DUCO",
+                value=circulation,
+                inline=True
+            )
+            embed.add_field(
+                name=":moneybag: DUCO market cap",
+                value=market_cap,
+                inline=True
+            )
+            embed.add_field(
+                name="<:duco:876588980630618152> DUCO price",
+                value=duco_price,
+                inline=True
+            )
+            embed.add_field(
+                name="More stats",
+                value="[Duino-Coin Explorer](https://explorer.duinocoin.com/)",
+                inline=True
+            )
 
             await message.channel.send(embed=embed)
 
