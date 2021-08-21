@@ -31,7 +31,7 @@ NODES = {
     },
     ":heartpulse: PulsePool *(149.91.88.18)*": {
         "ip": "149.91.88.18",
-        "port": 5999,
+        "port": 1612,
         "status": ":question: Unknown"
     },
     ":star: StarPool *(51.158.182.90)*": {
