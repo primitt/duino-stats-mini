@@ -43,6 +43,11 @@ NODES = {
         "ip": "193.164.7.180",
         "port": 6000,
         "status": ":question: Unknown"
+    },
+    ":snowflake: BeyondPool *(beyondpool.io)*": {
+        "ip": "beyondpool.io",
+        "port": 6000,
+        "status": ":question: Unknown"
     }
 }
 
