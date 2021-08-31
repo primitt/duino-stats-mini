@@ -42,11 +42,6 @@ NODES = {
         "port": 6000,
         "status": ":question: Unknown"
     },
-    ":trophy: WinnerPool *(193.164.7.180)*": {
-        "ip": "193.164.7.180",
-        "port": 6000,
-        "status": ":question: Unknown"
-    },
     ":snowflake: BeyondPool *(beyondpool.io)*": {
         "ip": "beyondpool.io",
         "port": 6000,
@@ -67,10 +62,15 @@ duino_stats_pings = [
     "task for you"
 ]
 
+cards = [
+    "utils/card_1.png",
+    "utils/card_2.png"
+]
+
 
 def generate_card(nick: str, duco: float, discord_nick: str):
     try:
-        image = Image.open('utils/card.png')
+        image = Image.open(random.choice(cards))
         draw = ImageDraw.Draw(image)
         font = ImageFont.truetype('utils/Lato-Regular.ttf', size=28)
         font2 = ImageFont.truetype('utils/Lato-Black.ttf', size=20)
@@ -78,11 +78,11 @@ def generate_card(nick: str, duco: float, discord_nick: str):
         color = "#FFFFFF"
 
         nick = str(nick)+"'s balance"
-        draw.text((160, 205), str(nick), fill=color, font=font2)
+        draw.text((160, 80), str(nick), fill=color, font=font2)
         duco_str = str(round(duco, 3)) + " DUCO"
-        draw.text((160, 230), duco_str, fill=color, font=font)
+        draw.text((160, 102.5), duco_str, fill=color, font=font)
         duco_str = str(round(duco, 3)) + " DUCO"
-        draw.text((160, 262), str(discord_nick), fill=color, font=font3)
+        draw.text((160, 137.5), str(discord_nick), fill=color, font=font3)
 
         image.save('utils/out.png')
         return True
@@ -279,7 +279,7 @@ async def on_message(message):
                                 inline=False)
 
                             if generate_card(command[1], balance,
-                                             client.user.name):
+                                             message.author.display_name):
                                 print("Adding image")
                                 await message.channel.send(
                                     embed=embed,
