@@ -14,6 +14,7 @@ import requests
 from datetime import datetime
 import aiohttp
 import asyncio
+import traceback
 from time import sleep
 
 load_dotenv()
@@ -205,6 +206,7 @@ async def on_message(message):
                             response["result"]["balance"]["balance"])
                         miners = response["result"]["miners"]
                         verified = response["result"]["balance"]["verified"]
+                        created = response["result"]["balance"]["created"]
 
                         try:
                             async with aiohttp.ClientSession() as session:
@@ -238,7 +240,12 @@ async def on_message(message):
                             embed.add_field(
                                 name=":question: Verified account",
                                 value=str(verified).capitalize(),
-                                inline=False)
+                                inline=True)
+
+                            embed.add_field(
+                                name=":calendar: Created",
+                                value=str(created).capitalize(),
+                                inline=True)
 
                             total_hashrate = 0
                             if not miners:
@@ -260,12 +267,12 @@ async def on_message(message):
 
                                     miner_str += (
                                         " **"
-                                        + str(miner["accepted"])
+                                        + str(int(miner["accepted"]))
                                         + "/"
-                                        + str(miner["accepted"] +
-                                              miner["rejected"])
+                                        + str(int(miner["accepted"]) +
+                                              int(miner["rejected"]))
                                         + "** "
-                                        + str(prefix("H/s", miner["hashrate"]))
+                                        + str(prefix("H/s", int(miner["hashrate"])))
                                         + "\n"
                                     )
 
@@ -297,7 +304,7 @@ async def on_message(message):
                         except Exception as e:
                             await message.channel.send(
                                 "`ERROR` Can't fetch user data: "
-                                + str(e))
+                                + str(traceback.format_exc()))
                 except Exception as e:
                     await message.channel.send(
                         "`ERROR` Can't fetch the balances: "
