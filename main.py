@@ -204,6 +204,7 @@ async def on_message(message):
                         balance = float(
                             response["result"]["balance"]["balance"])
                         miners = response["result"]["miners"]
+                        verified = response["result"]["balance"]["verified"]
 
                         try:
                             async with aiohttp.ClientSession() as session:
@@ -224,6 +225,7 @@ async def on_message(message):
                             embed.set_footer(
                                 text=client.user.name,
                                 icon_url=client.user.avatar_url)
+
                             embed.add_field(
                                 name="<:duco:876588980630618152> Balance",
                                 value=str(balance)
@@ -231,6 +233,11 @@ async def on_message(message):
                                 + " ($"
                                 + str(round(balance_in_usd, 4))
                                 + ")",
+                                inline=False)
+
+                            embed.add_field(
+                                name=":question: Verified account",
+                                value=str(verified).capitalize(),
                                 inline=False)
 
                             total_hashrate = 0
