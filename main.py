@@ -499,8 +499,8 @@ async def on_message(message):
             embed = discord.Embed(
                 title="DuinoCraft",
                 description=("Server version: **Minecraft 1.16-1.17.1**\n"
-                             + "Survival: survival.duinocraft.com \n"
-                             + "Skyblock: skyblock.duinocraft.com \n"
+                             + "Survival: **survival.duinocraft.com** \n"
+                             + "Skyblock: **skyblock.duinocraft.com** \n"
                              + "Earn Duino-Coin just by playing!"),
                 color=discord.Color.gold(),
                 timestamp=datetime.utcnow())
