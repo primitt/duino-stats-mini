@@ -3,14 +3,18 @@ import socketserver
 import http.server
 from PIL import Image, ImageDraw, ImageFont
 import os
+
 # python3 -m pip install python-dotenv
 from dotenv import load_dotenv
+
 # python3 -m pip install discord-py
 import discord
-import random
-import json
+
 # python3 -m pip install requests
 import requests
+
+import random
+import json
 from datetime import datetime
 import aiohttp
 import asyncio
@@ -128,15 +132,18 @@ async def on_message(message):
     help_embed = discord.Embed(
         title="List of available commands",
         color=discord.Color.gold(),
-        timestamp=datetime.utcnow())
+        timestamp=datetime.utcnow()
+    )
     help_embed.set_author(
         name=message.author.display_name,
         icon_url=message.author.avatar_url)
     help_embed.set_footer(
         text=client.user.name,
-        icon_url=client.user.avatar_url)
+        icon_url=client.user.avatar_url
+    )
     help_embed.set_thumbnail(
-        url=client.user.avatar_url)
+        url=client.user.avatar_url
+    )
     help_embed.add_field(
         name="General",
         value="""\
@@ -144,26 +151,31 @@ async def on_message(message):
         `{p}price` - Show current DUCO prices
         `{p}help` - Show this help message
         `{p}mcip` - Show DuinoCraft IP
+        `{p}mc-survival` - Shows online people in the Survival mc server
+        `{p}mc-skyblock` - Shows online people in the SkyBlock mc server
         `{p}profile` - Show info about your profile
         `{p}server` - Show mining nodes status
         `{p}invite` - Invite Duino Stats Mini to your server
         `{p}about` - Show info about the bot
         `{p}statistics` - Show network stats
         """.replace("{p}", PREFIX),
-        inline=False)
+        inline=False
+    )
     help_embed.add_field(
         name="Admin",
         value="""\
         `{p}say <tosay>` - Make the bot say something
         """.replace("{p}", PREFIX),
-        inline=False)
+        inline=False
+    )
 
     if message.guild.id == 677615191793467402:
         if random.randint(0, 500) == 77:
             rand_ping = random.choice(duino_stats_pings)
             await message.channel.send(
                 "<@!691404890290913280> "
-                + rand_ping)
+                + rand_ping
+            )
 
     if message.author == client.user:
         return
@@ -177,6 +189,171 @@ async def on_message(message):
 
     if message.content.startswith(PREFIX):
         command = message.content.strip(PREFIX).split(" ")
+
+        # adding the people printing
+        # Planification
+        """ 
+        It needs 4 phases:
+        - contact w the api (retrieve the json w requests)
+        - test req status (test if it reached the API)
+        - parse the json (inside players index)
+        - show the info w an embed
+        """
+
+        if command[0] == "mc-survival":
+            
+            survival_url = "https://api.mcsrvstat.us/2/survival.duinocraft.com"
+            
+            #retrieve json
+            request = requests.get(survival_url)
+            
+            #check status
+            status = request.status_code
+            if status == 200:
+                print("Status: "+str(status))
+            else:
+                raise Exception("Request to API with status: " + status)
+            #parse json
+            data = request.text
+            json_data = json.loads(data)
+            online_people = json_data['players']
+            online_amount= online_people["online"]
+            
+            if online_amount > 0:
+                players = online_people["list"]
+            
+                # player counter 
+                counter = 1
+
+                #print with embed
+                
+                embed = discord.Embed(
+                    title="Online people in Survival Server.",
+                    color=discord.Color.gold(),
+                    timestamp=datetime.utcnow()
+                )
+                embed.set_author(
+                    name=message.author.display_name,
+                    icon_url=message.author.avatar_url
+                )
+                embed.set_footer(
+                    text=client.user.name,
+                    icon_url=client.user.avatar_url
+                )
+                embed.add_field(
+                    name="Online players amount",
+                    value= str(online_amount),
+                    inline=False
+                )
+                for player in players:
+                    embed.add_field(
+                        name="Players List",
+                        value=str("Player " 
+                        + str(counter) 
+                        + ": "
+                        + 
+                        player),
+                        inline=False
+                    )
+                    counter+=1
+                await message.channel.send(embed=embed)
+            else:
+                embed = discord.Embed(
+                    title="Online people in Survival Server.",
+                    color=discord.Color.gold(),
+                    timestamp=datetime.utcnow()
+                )
+                embed.set_author(
+                    name=message.author.display_name,
+                    icon_url=message.author.avatar_url
+                )
+                embed.set_footer(
+                    text=client.user.name,
+                    icon_url=client.user.avatar_url)
+                embed.add_field(
+                    name="There are no players online",
+                    value= "Players: " + str(online_amount),
+                    inline=False
+                )
+                await message.channel.send(embed=embed)
+
+
+        if command[0] == "mc-skyblock":
+            
+            skyblock_url = "https://api.mcsrvstat.us/2/skyblock.duinocraft.com"
+
+            #retrieve json
+            request = requests.get(skyblock_url)
+            
+            #check status
+            status = request.status_code
+            if status == 200:
+                print("Status: "+str(status))
+            else:
+                raise Exception("Request to API with status: " + status)
+            #parse json
+            data = request.text
+            json_data = json.loads(data)
+            online_people = json_data['players']
+            online_amount= online_people["online"]
+            
+            if online_amount > 0:
+                players = online_people["list"]
+            
+                # player counter 
+                counter = 1
+
+                #print with embed
+                
+                embed = discord.Embed(
+                    title="Online people in SkyBlock Server.",
+                    color=discord.Color.gold(),
+                    timestamp=datetime.utcnow()
+                )
+                embed.set_author(
+                    name=message.author.display_name,
+                    icon_url=message.author.avatar_url
+                )
+                embed.set_footer(
+                    text=client.user.name,
+                    icon_url=client.user.avatar_url
+                )
+                embed.add_field(
+                    name="Online players amount",
+                    value=str(online_amount),
+                    inline=False
+                )
+                for player in players:
+                    embed.add_field(
+                        name="Players List",
+                        value=str("Player " 
+                        + str(counter) 
+                        + ": "
+                        + 
+                        player),
+                        inline=False
+                    )
+                    counter+=1
+                await message.channel.send(embed=embed)
+            else:
+                embed = discord.Embed(
+                    title="Online people in Survival Server.",
+                    color=discord.Color.gold(),
+                    timestamp=datetime.utcnow()
+                )
+                embed.set_author(
+                    name=message.author.display_name,
+                    icon_url=message.author.avatar_url
+                )
+                embed.set_footer(
+                    text=client.user.name,
+                    icon_url=client.user.avatar_url)
+                embed.add_field(
+                    name="There are no players online",
+                    value= "Players: " + str(online_amount),
+                    inline=False
+                )
+                await message.channel.send(embed=embed)
 
         if command[0] == "say":
             if message.author.guild_permissions.administrator:
@@ -220,10 +397,12 @@ async def on_message(message):
                             embed = discord.Embed(
                                 title=str(command[1]+"'s Duino-Coin account"),
                                 color=discord.Color.gold(),
-                                timestamp=datetime.utcnow())
+                                timestamp=datetime.utcnow()
+                            )
                             embed.set_author(
                                 name=message.author.display_name,
-                                icon_url=message.author.avatar_url)
+                                icon_url=message.author.avatar_url
+                            )
                             embed.set_footer(
                                 text=client.user.name,
                                 icon_url=client.user.avatar_url)
