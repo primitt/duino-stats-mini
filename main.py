@@ -206,32 +206,32 @@ async def on_message(message):
         """
 
         if command[0] == "mc-survival":
-            
+
             survival_url = "https://api.mcsrvstat.us/2/survival.duinocraft.com"
-            
-            #retrieve json
+
+            # retrieve json
             request = requests.get(survival_url)
-            
-            #check status
+
+            # check status
             status = request.status_code
             if status == 200:
                 print("Status: "+str(status))
             else:
                 raise Exception("Request to API with status: " + status)
-            #parse json
+            # parse json
             data = request.text
             json_data = json.loads(data)
             online_people = json_data['players']
-            online_amount= online_people["online"]
-            
+            online_amount = online_people["online"]
+
             if online_amount > 0:
                 players = online_people["list"]
-            
-                # player counter 
+
+                # player counter
                 counter = 1
 
-                #print with embed
-                
+                # print with embed
+
                 embed = discord.Embed(
                     title="Online people in Survival Server.",
                     color=discord.Color.gold(),
@@ -247,20 +247,20 @@ async def on_message(message):
                 )
                 embed.add_field(
                     name="Online players amount",
-                    value= str(online_amount),
+                    value=str(online_amount),
                     inline=False
                 )
                 for player in players:
                     embed.add_field(
                         name="Players List",
-                        value=str("Player " 
-                        + str(counter) 
-                        + ": "
-                        + 
-                        player),
+                        value=str("Player "
+                                  + str(counter)
+                                  + ": "
+                                  +
+                                  player),
                         inline=False
                     )
-                    counter+=1
+                    counter += 1
                 await message.channel.send(embed=embed)
             else:
                 embed = discord.Embed(
@@ -277,39 +277,38 @@ async def on_message(message):
                     icon_url=client.user.avatar_url)
                 embed.add_field(
                     name="There are no players online",
-                    value= "Players: " + str(online_amount),
+                    value="Players: " + str(online_amount),
                     inline=False
                 )
                 await message.channel.send(embed=embed)
 
-
         if command[0] == "mc-skyblock":
-            
+
             skyblock_url = "https://api.mcsrvstat.us/2/skyblock.duinocraft.com"
 
-            #retrieve json
+            # retrieve json
             request = requests.get(skyblock_url)
-            
-            #check status
+
+            # check status
             status = request.status_code
             if status == 200:
                 print("Status: "+str(status))
             else:
                 raise Exception("Request to API with status: " + status)
-            #parse json
+            # parse json
             data = request.text
             json_data = json.loads(data)
             online_people = json_data['players']
-            online_amount= online_people["online"]
-            
+            online_amount = online_people["online"]
+
             if online_amount > 0:
                 players = online_people["list"]
-            
-                # player counter 
+
+                # player counter
                 counter = 1
 
-                #print with embed
-                
+                # print with embed
+
                 embed = discord.Embed(
                     title="Online people in SkyBlock Server.",
                     color=discord.Color.gold(),
@@ -331,14 +330,14 @@ async def on_message(message):
                 for player in players:
                     embed.add_field(
                         name="Players List",
-                        value=str("Player " 
-                        + str(counter) 
-                        + ": "
-                        + 
-                        player),
+                        value=str("Player "
+                                  + str(counter)
+                                  + ": "
+                                  +
+                                  player),
                         inline=False
                     )
-                    counter+=1
+                    counter += 1
                 await message.channel.send(embed=embed)
             else:
                 embed = discord.Embed(
@@ -355,7 +354,7 @@ async def on_message(message):
                     icon_url=client.user.avatar_url)
                 embed.add_field(
                     name="There are no players online",
-                    value= "Players: " + str(online_amount),
+                    value="Players: " + str(online_amount),
                     inline=False
                 )
                 await message.channel.send(embed=embed)
@@ -386,9 +385,35 @@ async def on_message(message):
                     else:
                         balance = float(
                             response["result"]["balance"]["balance"])
-                        miners = response["result"]["miners"]
+                        miners_a = response["result"]["miners"]
                         verified = response["result"]["balance"]["verified"]
                         created = response["result"]["balance"]["created"]
+
+                        import traceback
+                        try:
+                            miners = {}
+                            for miner in miners_a:
+                                miner_wid = miner["wd"]
+
+                                if not miner_wid:
+                                    miner_wid = random.randint(0, 2811)
+
+                                miner_h = miner["hashrate"]
+                                miner_r = miner["rejected"]
+                                miner_a = miner["accepted"]
+
+                                if not miner_wid in miners:
+                                    miners[miner_wid] = miner
+                                    miners[miner_wid]["threads"] = 1
+                                    continue
+                                elif miner_wid in miners:
+                                    miners[miner_wid]["hashrate"] += miner_h
+                                    miners[miner_wid]["rejected"] += miner_r
+                                    miners[miner_wid]["accepted"] += miner_a
+                                    miners[miner_wid]["threads"] += 1
+                                    continue
+                        except Exception:
+                            print(traceback.format_exc())
 
                         try:
                             async with aiohttp.ClientSession() as session:
@@ -402,12 +427,10 @@ async def on_message(message):
                             embed = discord.Embed(
                                 title=str(command[1]+"'s Duino-Coin account"),
                                 color=discord.Color.gold(),
-                                timestamp=datetime.utcnow()
-                            )
+                                timestamp=datetime.utcnow())
                             embed.set_author(
                                 name=message.author.display_name,
-                                icon_url=message.author.avatar_url
-                            )
+                                icon_url=message.author.avatar_url)
                             embed.set_footer(
                                 text=client.user.name,
                                 icon_url=client.user.avatar_url)
@@ -438,27 +461,29 @@ async def on_message(message):
                                 miner_str = ""
                                 i = 0
                                 for miner in miners:
-                                    total_hashrate += miner["hashrate"]
+                                    total_hashrate += miners[miner]["hashrate"]
 
-                                    if miner["identifier"] != "None":
+                                    if miners[miner]["identifier"] != "None":
                                         miner_str += (
-                                            miner["identifier"]
-                                            + " ("
-                                            + miner["software"]
-                                            + ")")
+                                            f"**{miners[miner]['identifier']}**"
+                                            + f" ({miners[miner]['software']})")
                                     else:
-                                        miner_str += miner["software"]
+                                        miner_str += miners[miner]["software"]
 
                                     miner_str += (
-                                        " **"
-                                        + str(int(miner["accepted"]))
+                                        " - **"
+                                        + str(int(miners[miner]["accepted"]))
                                         + "/"
-                                        + str(int(miner["accepted"]) +
-                                              int(miner["rejected"]))
-                                        + "** "
-                                        + str(prefix("H/s", int(miner["hashrate"])))
-                                        + "\n"
-                                    )
+                                        + str(int(miners[miner]["accepted"]) +
+                                              int(miners[miner]["rejected"]))
+                                        + "** acc. shares, **"
+                                        + str(prefix("H/s", int(miners[miner]["hashrate"])))
+                                        + "**")
+
+                                    if miners[miner]["threads"] > 1:
+                                        miner_str += f" ({miners[miner]['threads']} threads)"
+
+                                    miner_str += "\n"
 
                                     i += 1
                                     if i >= 10:
