@@ -31,24 +31,29 @@ PREFIX = "+"
 REPLIES_URI = 'utils/replies.json'
 USER_API = "https://server.duinocoin.com/users/"
 PRICE_API = "https://server.duinocoin.com/api.json"
-NODES = {
-    ":floppy_disk: Master Server *(51.15.127.80)*": {
+{
+    ":floppy_disk: Master Server": {
         "ip": "51.15.127.80",
         "port": 2812,
         "status": ":question: Unknown"
     },
-    ":heartpulse: PulsePool *(149.91.88.18)*": {
+    ":heartpulse: PulsePool": {
         "ip": "149.91.88.18",
-        "port": 1612,
+        "port": 1224,
         "status": ":question: Unknown"
     },
-    ":star: StarPool *(51.158.182.90)*": {
+    ":star: StarPool": {
         "ip": "51.158.182.90",
+        "port": 6006,
+        "status": ":question: Unknown"
+    },
+    ":snowflake: BeyondPool": {
+        "ip": "beyondpool.io",
         "port": 6000,
         "status": ":question: Unknown"
     },
-    ":snowflake: BeyondPool *(beyondpool.io)*": {
-        "ip": "beyondpool.io",
+    ":broken_heart: SvkoPool": {
+        "ip": "5.230.69.132",
         "port": 6000,
         "status": ":question: Unknown"
     }
@@ -77,17 +82,17 @@ def generate_card(nick: str, duco: float, discord_nick: str):
     try:
         image = Image.open(random.choice(cards))
         draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype('utils/Lato-Regular.ttf', size=28)
-        font2 = ImageFont.truetype('utils/Lato-Black.ttf', size=20)
-        font3 = ImageFont.truetype('utils/Lato-Black.ttf', size=12)
-        color = "#FFFFFF"
+        font = ImageFont.truetype('utils/Lato-Black.ttf', size=26)
+        font2 = ImageFont.truetype('utils/Lato-Regular.ttf', size=20)
+        font3 = ImageFont.truetype('utils/Lato-Regular.ttf', size=18)
+        color = "#0a0a0a"
 
         nick = str(nick)+"'s balance"
-        draw.text((160, 80), str(nick), fill=color, font=font2)
+        draw.text((155, 84), str(nick), fill=color, font=font2)
         duco_str = str(round(duco, 3)) + " DUCO"
-        draw.text((160, 102.5), duco_str, fill=color, font=font)
+        draw.text((155, 106), duco_str, fill=color, font=font)
         duco_str = str(round(duco, 3)) + " DUCO"
-        draw.text((160, 137.5), str(discord_nick), fill=color, font=font3)
+        draw.text((155, 138), str(discord_nick), fill=color, font=font3)
 
         image.save('utils/out.png')
         return True
