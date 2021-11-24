@@ -1,18 +1,11 @@
-# python3 -m pip install pillow
+# python3 -m pip install requirments.txt
 import socketserver
 import http.server
 from PIL import Image, ImageDraw, ImageFont
 import os
-
-# python3 -m pip install python-dotenv
 from dotenv import load_dotenv
-
-# python3 -m pip install discord-py
 import discord
-
-# python3 -m pip install requests
 import requests
-
 import random
 import json
 from datetime import datetime
