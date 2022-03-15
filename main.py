@@ -364,7 +364,7 @@ async def on_message(message):
                             miners_a = response["result"]["miners"]
                             verified = response["result"]["balance"]["verified"]
                             created = response["result"]["balance"]["created"]
-
+                            stake_amount = response["result"]["balance"]["stake_amount"]
                             import traceback
                             try:
                                 miners = {}
@@ -418,6 +418,11 @@ async def on_message(message):
                                     + " ($"
                                     + str(round(balance_in_usd, 4))
                                     + ")",
+                                    inline=False)
+                               
+                                embed.add_field(
+                                    name=":handshake: Staking",
+                                    value=str(stake_amount + "DUCO"),
                                     inline=False)
 
                                 embed.add_field(
