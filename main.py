@@ -219,7 +219,7 @@ async def on_message(message):
 
         if command[0] == "mc-survival":
             with message.channel.typing():
-                survival_url = "https://api.mcsrvstat.us/2/survival.duinocraft.com"
+                survival_url = "https://api.mcsrvstat.us/2/vps.blazecoding.me"
                 request = requests.get(survival_url)
                 status = request.status_code
                 if status == 200:
