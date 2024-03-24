@@ -1,4 +1,4 @@
-pillow
-python-dotenv
-discord-py
-requests
+pillow==latest
+python-dotenv==latest
+discord-py==latest
+requests==latest
